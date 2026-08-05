@@ -3,11 +3,6 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 
-// Allow your Render frontend domain (or allow all origins for testing)
-app.use(cors({
-  origin: '*' // Or use your frontend URL: 'https://dot-40-vids.onrender.com'
-}));
-
 app.use(express.json());
 const authRoutes = require('./routes/auth');
 const videoRoutes = require('./routes/videos');
