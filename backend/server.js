@@ -1,8 +1,14 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const path = require('path');
+const app = express();
 
+// Allow your Render frontend domain (or allow all origins for testing)
+app.use(cors({
+  origin: '*' // Or use your frontend URL: 'https://dot-40-vids.onrender.com'
+}));
+
+app.use(express.json());
 const authRoutes = require('./routes/auth');
 const videoRoutes = require('./routes/videos');
 const userRoutes = require('./routes/users');
