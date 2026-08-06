@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { api } from '../lib/api';
+import { mediaUrl } from '../lib/api';
 import { useAuth } from '../lib/AuthContext';
 import { initials } from '../lib/format';
 import VideoCard from '../components/VideoCard';
@@ -62,7 +63,7 @@ export default function Channel() {
             {shorts.map((s) => (
               <Link key={s.id} to={`/watch/${s.id}`} style={{ flexShrink: 0, width: 140 }}>
                 <div className="thumb-wrap" style={{ aspectRatio: '9/16' }}>
-                  {s.thumbnailUrl ? <img src={s.thumbnailUrl} alt={s.title} /> : <div className="thumb-fallback"><span className="dot" /></div>}
+                  {s.thumbnailUrl ? <img src={mediaUrl(s.thumbnailUrl)} alt={s.title} /> : <div className="thumb-fallback"><span className="dot" /></div>}
                 </div>
                 <div className="video-title" style={{ fontSize: '0.8rem', marginTop: 6 }}>{s.title}</div>
               </Link>

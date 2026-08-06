@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { api } from '../lib/api';
+import { mediaUrl } from '../lib/api';
 import { formatDuration, formatViews } from '../lib/format';
 
 export default function PlaylistDetail() {
@@ -57,7 +58,7 @@ export default function PlaylistDetail() {
             <div key={v.id} className="comment" style={{ alignItems: 'flex-start' }}>
               <Link to={`/watch/${v.id}`} style={{ width: 200, flexShrink: 0 }}>
                 <div className="thumb-wrap">
-                  {v.thumbnailUrl ? <img src={v.thumbnailUrl} alt={v.title} /> : <div className="thumb-fallback"><span className="dot" /></div>}
+                  {v.thumbnailUrl ? <img src={mediaUrl(v.thumbnailUrl)} alt={v.title} /> : <div className="thumb-fallback"><span className="dot" /></div>}
                   <span className="duration-badge">{formatDuration(v.durationSeconds)}</span>
                 </div>
               </Link>

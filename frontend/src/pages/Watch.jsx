@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { api } from '../lib/api';
+import { mediaUrl } from '../lib/api';
 import { useAuth } from '../lib/AuthContext';
 import { formatViews, timeAgo, initials } from '../lib/format';
 import SaveMenu from '../components/SaveMenu';
@@ -56,7 +57,7 @@ export default function Watch() {
     <div className="watch-layout">
       <div>
         <div className="player-wrap">
-          <video src={video.videoUrl} controls autoPlay poster={video.thumbnailUrl || undefined} />
+          <video src={mediaUrl(video.videoUrl)} controls autoPlay poster={video.thumbnailUrl ? mediaUrl(video.thumbnailUrl) : undefined} />
         </div>
         <h1 className="watch-title">{video.title}</h1>
 
@@ -115,7 +116,7 @@ export default function Watch() {
         {recs.slice(0, 10).map((v) => (
           <Link key={v.id} to={`/watch/${v.id}`} className="rec-card">
             <div className="thumb-wrap">
-              {v.thumbnailUrl ? <img src={v.thumbnailUrl} alt={v.title} /> : <div className="thumb-fallback"><span className="dot" /></div>}
+              {v.thumbnailUrl ? <img src={mediaUrl(v.thumbnailUrl)} alt={v.title} /> : <div className="thumb-fallback"><span className="dot" /></div>}
               <span className="duration-badge">{Math.floor(v.durationSeconds / 60)}:{String(Math.floor(v.durationSeconds % 60)).padStart(2, '0')}</span>
             </div>
             <div>

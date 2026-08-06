@@ -1,4 +1,17 @@
-const BASE = '/api';
+// In development, the Vite dev server proxies /api and /uploads to the
+// backend on localhost:4000, so no base URL is needed. In production,
+// frontend and backend are usually deployed separately — set VITE_API_BASE
+// (at build time) to the backend's full URL, e.g. https://dot40vids-api.onrender.com
+const API_ORIGIN = import.meta.env.VITE_API_BASE || '';
+const BASE = `${API_ORIGIN}/api`;
+
+// Turns a relative path returned by the API (e.g. /uploads/thumbnails/x.jpg)
+// into an absolute URL pointing at the backend, when one is configured.
+export function mediaUrl(path) {
+  if (!path) return path;
+  if (/^https?:\/\//.test(path)) return path;
+  return `${API_ORIGIN}${path}`;
+}
 
 function getToken() {
   return localStorage.getItem('dot40_token');
@@ -14,6 +27,7 @@ async function request(path, { method = 'GET', body, isForm = false, auth = true
   const res = await fetch(`${BASE}${path}`, {
     method,
     headers,
+    cache: 'no-store',
     body: isForm ? body : body ? JSON.stringify(body) : undefined
   });
   const data = await res.json().catch(() => ({}));

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
+import { mediaUrl } from '../lib/api';
 import { useAuth } from '../lib/AuthContext';
 import { formatViews, initials } from '../lib/format';
 
@@ -39,7 +40,7 @@ function ShortItem({ short, onReact }) {
     <div ref={containerRef} className="short-item">
       <video
         ref={videoRef}
-        src={short.videoUrl}
+        src={mediaUrl(short.videoUrl)}
         loop
         muted={muted}
         playsInline

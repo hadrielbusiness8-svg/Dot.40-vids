@@ -1,12 +1,13 @@
 import { Link } from 'react-router-dom';
 import { formatDuration, formatViews, timeAgo, initials } from '../lib/format';
+import { mediaUrl } from '../lib/api';
 
 export default function VideoCard({ video, size = 'default' }) {
   return (
     <Link to={`/watch/${video.id}`} className="video-card">
       <div className="thumb-wrap">
         {video.thumbnailUrl ? (
-          <img src={video.thumbnailUrl} alt={video.title} loading="lazy" />
+          <img src={mediaUrl(video.thumbnailUrl)} alt={video.title} loading="lazy" />
         ) : (
           <div className="thumb-fallback"><span className="dot" /></div>
         )}
