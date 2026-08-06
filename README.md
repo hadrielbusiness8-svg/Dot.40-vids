@@ -100,6 +100,37 @@ Before putting this in front of real users, you'll want to:
    a static host or CDN like Vercel/Netlify), pointing the frontend at your
    backend's real URL instead of the Vite dev proxy.
 
+## Deploying (free hosting on Render)
+
+The app is set up so frontend and backend can be deployed to two separate
+free Render services. Set `VITE_API_BASE` when building the frontend to
+point it at your backend's URL — see the step-by-step guide your assistant
+walked you through, or these notes:
+
+1. Push this project to a GitHub repo (backend and frontend folders both
+   included).
+2. On Render, create a **Web Service** from the repo with root directory
+   `backend`, build command `npm install`, start command `npm start`. Add
+   an environment variable `JWT_SECRET` set to a long random string.
+3. Create a **Static Site** from the same repo with root directory
+   `frontend`, build command `npm install && npm run build`, publish
+   directory `dist`. Add an environment variable `VITE_API_BASE` set to
+   your backend service's URL (e.g. `https://dot40vids-api.onrender.com`,
+   no trailing slash).
+4. Add a rewrite rule on the static site: source `/*` → destination
+   `/index.html` (type Rewrite), so client-side routes like `/watch/:id`
+   don't 404 on refresh.
+
+**Important limitation on Render's free tier**: free web services don't
+have a persistent disk, so the SQLite database and any uploaded videos
+are wiped whenever the service restarts or redeploys (it also spins down
+after 15 minutes of inactivity, with a ~30-60s cold start on the next
+request). This is fine for demoing and sharing, but don't rely on it to
+keep uploads around. For real persistence, swap SQLite for a hosted
+Postgres (e.g. Neon's free tier, no expiry) and video storage for an
+object store (e.g. Cloudflare R2's free tier) — see "Going to production"
+above.
+
 ## Tech stack
 
 Backend: Express, better-sqlite3, jsonwebtoken, bcryptjs, multer.

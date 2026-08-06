@@ -1,0 +1,12 @@
+node_modules/
+dist/
+*.db
+*.db-shm
+*.db-wal
+.env
+backend/uploads/videos/*
+!backend/uploads/videos/.gitkeep
+backend/uploads/thumbnails/*
+!backend/uploads/thumbnails/.gitkeep
+backend/uploads/avatars/*
+!backend/uploads/avatars/.gitkeep
