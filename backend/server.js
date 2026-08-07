@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 
 const authRoutes = require('./routes/auth');
 const videoRoutes = require('./routes/videos');
@@ -13,6 +14,13 @@ const notificationRoutes = require('./routes/notifications');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
+
+// Make sure the upload directories exist before anything tries to write to
+// them — empty folders don't survive git/GitHub uploads, so we can't rely
+// on them already being there in a fresh deploy.
+for (const dir of ['uploads/videos', 'uploads/thumbnails', 'uploads/avatars']) {
+  fs.mkdirSync(path.join(__dirname, dir), { recursive: true });
+}
 
 app.use(cors());
 app.use(express.json());
