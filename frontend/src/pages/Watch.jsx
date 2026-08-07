@@ -1,28 +1,62 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { api } from '../lib/api';
 import { mediaUrl } from '../lib/api';
 import { useAuth } from '../lib/AuthContext';
 import { formatViews, timeAgo, initials } from '../lib/format';
 import SaveMenu from '../components/SaveMenu';
+import { useViewCounter } from '../lib/useViewCounter';
+
+const SHORT_VIEW_THRESHOLD_SECONDS = 30;
+const LONG_VIEW_THRESHOLD_SECONDS = 120;
 
 export default function Watch() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [video, setVideo] = useState(null);
+  const [channel, setChannel] = useState(null);
   const [comments, setComments] = useState([]);
   const [commentText, setCommentText] = useState('');
   const [recs, setRecs] = useState([]);
   const [error, setError] = useState('');
+  const [subBusy, setSubBusy] = useState(false);
+  const videoRef = useRef(null);
+
+  useViewCounter(
+    videoRef,
+    video?.id,
+    video ? (video.isShort ? SHORT_VIEW_THRESHOLD_SECONDS : LONG_VIEW_THRESHOLD_SECONDS) : null
+  );
 
   const load = useCallback(() => {
-    api.video(id).then(({ video }) => setVideo(video)).catch((e) => setError(e.message));
+    api.video(id).then(({ video }) => {
+      setVideo(video);
+      if (video.owner?.username) {
+        api.channel(video.owner.username).then(({ channel }) => setChannel(channel)).catch(() => {});
+      }
+    }).catch((e) => setError(e.message));
     api.comments(id).then(({ comments }) => setComments(comments)).catch(() => {});
   }, [id]);
 
   useEffect(() => { load(); }, [load]);
   useEffect(() => { api.feed().then(({ videos }) => setRecs(videos.filter((v) => v.id !== id))).catch(() => {}); }, [id]);
+
+  const toggleSubscribe = async () => {
+    if (!user) return navigate('/login');
+    if (!video.owner?.username) return;
+    setSubBusy(true);
+    try {
+      const res = channel?.isSubscribed
+        ? await api.unsubscribe(video.owner.username)
+        : await api.subscribe(video.owner.username);
+      setChannel((c) => ({ ...c, isSubscribed: res.subscribed, subscriberCount: res.subscriberCount }));
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setSubBusy(false);
+    }
+  };
 
   const react = async (value) => {
     if (!user) return navigate('/login');
@@ -57,9 +91,12 @@ export default function Watch() {
     <div className="watch-layout">
       <div>
         <div className="player-wrap">
-          <video src={mediaUrl(video.videoUrl)} controls autoPlay poster={video.thumbnailUrl ? mediaUrl(video.thumbnailUrl) : undefined} />
+          <video ref={videoRef} src={mediaUrl(video.videoUrl)} controls autoPlay poster={video.thumbnailUrl ? mediaUrl(video.thumbnailUrl) : undefined} />
         </div>
         <h1 className="watch-title">{video.title}</h1>
+        <div className="video-stats" style={{ marginBottom: 10 }}>
+          {formatViews(video.views)} · {timeAgo(video.createdAt)}
+        </div>
 
         <div className="channel-row">
           <div className="avatar">{initials(video.owner?.username)}</div>
@@ -67,8 +104,19 @@ export default function Watch() {
             <div className="channel-name">
               <Link to={`/channel/${video.owner?.username}`}>{video.owner?.username}</Link>
             </div>
-            <div className="channel-subs">{formatViews(video.views)} · {timeAgo(video.createdAt)}</div>
+            <div className="channel-subs">
+              {channel ? `${channel.subscriberCount} subscriber${channel.subscriberCount === 1 ? '' : 's'}` : '\u00A0'}
+            </div>
           </div>
+          {user?.username !== video.owner?.username && video.owner?.username && (
+            <button
+              className={`btn ${channel?.isSubscribed ? 'btn-ghost' : 'btn-accent'}`}
+              onClick={toggleSubscribe}
+              disabled={subBusy}
+            >
+              {channel?.isSubscribed ? 'Subscribed' : 'Subscribe'}
+            </button>
+          )}
           {user?.username === video.owner?.username && (
             <button className="btn btn-danger" onClick={removeVideo}>Delete</button>
           )}
