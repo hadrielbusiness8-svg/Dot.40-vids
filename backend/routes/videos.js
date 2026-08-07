@@ -149,18 +149,29 @@ router.get('/shorts/feed', optionalAuth, (req, res) => {
   res.json({ videos: rows.map(v => toPublic(v, req.user && req.user.id)) });
 });
 
-// Single video metadata (also increments view count and logs watch history)
+// Single video metadata (also logs watch history for signed-in users).
+// Views are NOT incremented here — see POST /:id/view, which only fires
+// once the viewer has actually watched enough of the video.
 router.get('/:id', optionalAuth, (req, res) => {
   const v = db.prepare('SELECT * FROM videos WHERE id = ?').get(req.params.id);
   if (!v) return res.status(404).json({ error: 'Video not found' });
-  db.prepare('UPDATE videos SET views = views + 1 WHERE id = ?').run(v.id);
   if (req.user) {
     db.prepare(`INSERT INTO watch_history (user_id, video_id, watched_at) VALUES (?, ?, ?)
       ON CONFLICT(user_id, video_id) DO UPDATE SET watched_at = excluded.watched_at`)
       .run(req.user.id, v.id, Date.now());
   }
-  const fresh = db.prepare('SELECT * FROM videos WHERE id = ?').get(v.id);
-  res.json({ video: toPublic(fresh, req.user && req.user.id) });
+  res.json({ video: toPublic(v, req.user && req.user.id) });
+});
+
+// Register a real view. Called by the frontend once the viewer has watched
+// past the minimum threshold (30s for Shorts, 2min for long videos) —
+// never just from loading the page. One increment per call; the frontend
+// is responsible for only calling this once per watch session.
+router.post('/:id/view', optionalAuth, (req, res) => {
+  const v = db.prepare('SELECT id FROM videos WHERE id = ?').get(req.params.id);
+  if (!v) return res.status(404).json({ error: 'Video not found' });
+  db.prepare('UPDATE videos SET views = views + 1 WHERE id = ?').run(v.id);
+  res.json({ ok: true });
 });
 
 // Stream video with HTTP range support (required for video scrubbing/seeking)
